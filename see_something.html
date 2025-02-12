@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="button.css">
+    <title>Photo Collection & Music Player</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 400px;
+            height: 500px;
+            transform-style: preserve-3d;
+        }
+        .photo {
+            position: absolute;
+            width: 150px;
+            height: 225px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            transition: all 0.5s;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .controlsBtn {
+            position: fixed;
+            bottom: 20px;
+            display: flex;
+            justify-content: center;
+            /* width: 100%; */
+            gap: 10px;
+            align-items: center;
+        }
+        .controlsBtn button {
+            background-color: #ff416c;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 10px;
+            margin: 0 10px;
+            border-radius: 50px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        /* #toggleRotation {
+            width: 250px;
+            border-radius: 50px;
+        }
+        #seeSomething {
+            width: 250px;
+            border-radius: 50px;
+        } */
+        #muteBtn {
+            width: 50px;
+            height: 50px;
+        }
+        #loadingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+        }
+        #mainbody {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen">Loading...</div>
+    <div id="mainbody">
+        <div class="container" id="photoContainer"></div>
+
+        <div class="controlsBtn">
+            <div>
+                <button id="toggleRotation" class="lovely-button btn1">Pause</button>
+            </div>
+            <div>
+                <a href="main.html">
+                    <button id="seeSomething" class="lovely-button btn1">Back</button>
+                </a>
+            </div>
+            <div>
+                <button id="muteBtn" class="lovely-button">🔊</button>
+            </div>
+            
+        </div>
+    
+    </div>
+
+    <audio id="audioPlayer" preload="auto"></audio>
+    
+
+    <script>
+        const container = document.getElementById('photoContainer');
+        const toggleRotationBtn = document.getElementById('toggleRotation');
+        const muteBtn = document.getElementById('muteBtn');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const mainbody = document.getElementById("mainbody");
+        const audioPlayer = document.getElementById('audioPlayer');
+        let photosLoaded = false;
+        let audioLoaded = false;
+        let initialLoadTime = 0;
+
+        const photos = [
+            'img/IMG1.jpg',
+            'img/IMG2.jpg',
+            'img/IMG3.jpg',
+            'img/IMG4.jpg',
+            'img/IMG5.jpg',
+            'img/IMG6.jpg',
+            'img/IMG7.jpg',
+            'img/IMG8.jpg'
+        ];
+
+        const songs = [
+            'music/song1.mp3'
+        ];
+       
+        let currentSongIndex = 0;
+
+        let angle = 90;
+        let isRotating = true;
+        let isMuted = false;
+        let rotationInterval;
+
+        // Create Photo Elements
+        function createPhotoElements() {
+            return Promise.all(
+                photos.map((photo, index) => new Promise((resolve) => {
+                    const photoElement = document.createElement('div');
+                    photoElement.className = 'photo';
+                    const img = new Image();
+                    img.src = photo;
+                    img.onload = () => resolve();
+                    photoElement.appendChild(img);
+                    container.appendChild(photoElement);
+                }))
+            );
+        }
+
+        // Load the first song
+        function loadFirstSong() {
+            return new Promise((resolve) => {
+                audioPlayer.src = songs[currentSongIndex];
+                audioPlayer.addEventListener('loadeddata', resolve, { once: true });
+            });
+        }
+
+        // Position Photos in Circle
+        function positionPhotos() {
+            const centerX = window.innerWidth / 6;
+            const centerY = window.innerHeight / 8;
+            const radius = 400;
+            const photoElements = document.querySelectorAll('.photo');
+            photoElements.forEach((photo, index) => {
+                const photoAngle = (index * 45 + angle) * (Math.PI / 180);
+                const x = Math.cos(photoAngle) * radius + centerX - 90;
+                const z = Math.sin(photoAngle) * radius;
+                const scale = (Math.sin(photoAngle) + 1) / 2 + 0.5;
+                photo.style.transform = `translate(${x}px, ${centerY}px) scale(${scale})`;
+                photo.style.zIndex = Math.floor(scale * 100);
+            });
+        }
+
+        // Rotate Photos
+        function rotatePhotos(direction = 1) {
+            angle += direction * 0.2;
+            if (angle >= 360) angle -= 360;
+            if (angle < 0) angle += 360;
+            positionPhotos();
+        }
+
+        // Start Rotation
+        function startRotation() {
+            if (rotationInterval) clearInterval(rotationInterval);
+            rotationInterval = setInterval(() => rotatePhotos(1), 100);
+        }
+
+        // Stop Rotation
+        function stopRotation() {
+            clearInterval(rotationInterval);
+        }
+
+        // Toggle Rotation
+        function toggleRotation() {
+            isRotating = !isRotating;
+            if (isRotating) {
+                startRotation();
+                audioPlayer.play();
+                toggleRotationBtn.textContent = 'Pause';
+            } else {
+                stopRotation();
+                audioPlayer.pause();
+                toggleRotationBtn.textContent = 'Resume';
+            }
+        }
+
+        // Mute/Unmute Music
+        function toggleMute() {
+            isMuted = !isMuted;
+            audioPlayer.muted = isMuted;
+            muteBtn.textContent = isMuted ? '🔇' : '🔊';
+        }
+
+        // Play Music & Load Next Song in Loop
+        function playMusic() {
+            audioPlayer.play();
+            audioPlayer.onended = () => {
+                currentSongIndex = (currentSongIndex + 1) % songs.length;
+                audioPlayer.src = songs[currentSongIndex];
+                audioPlayer.play();
+            };
+        }
+
+        // Calculate Load Time
+        function calculateInitialLoadTime() {
+            const startTime = performance.now();
+            return Promise.all([createPhotoElements(), loadFirstSong()]).then(() => {
+                const endTime = performance.now();
+                const loadTime = Math.round((endTime - startTime) / 1000);
+                return Math.max(5, loadTime);
+            });
+        }
+
+        // Initial Load Process
+        calculateInitialLoadTime().then((loadTime) => {
+            let timeRemaining = loadTime;
+            const countdown = setInterval(() => {
+                loadingScreen.textContent = `Loading... ${timeRemaining}s`;
+                if (timeRemaining <= 0) {
+                    clearInterval(countdown);
+                    loadingScreen.style.display = 'none';
+                    mainbody.style.display = "inline-block";
+                    startRotation();
+                    positionPhotos();
+                    playMusic();
+                }
+                timeRemaining--;
+            }, 1000);
+        });
+
+        // Event Listeners
+        toggleRotationBtn.addEventListener('click', toggleRotation);
+        muteBtn.addEventListener('click', toggleMute);
+
+        // Handle keyboard arrows and space
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') toggleRotation();
+            if (e.key === 'ArrowLeft') rotatePhotos(5);
+            if (e.key === 'ArrowRight') rotatePhotos(-5);
+        });
+
+        // Scroll to rotate photos
+        document.addEventListener('wheel', (e) => {
+            if (e.deltaY > 0) rotatePhotos(5);
+            else rotatePhotos(-5);
+        });
+
+        // Resize Handler
+        window.addEventListener('resize', positionPhotos);
+    </script>
+</body>
+</html>
