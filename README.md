@@ -1,5 +1,11 @@
-To See Outcome:
-https://rmnrj.github.io/Birthday/main.html
+# 🎉 Birthday Wishes 🎂
 
-This for my elder-brother who want to wish bhauju [his girlfriend] in her birthday.
-With Love❤️
+This page is dedicated to my elder brother,  
+who wants to wish *bhauju* (his girlfriend) on her birthday.  
+
+With Love ❤️
+
+---
+
+👉 To see the outcome, visit:  
+[Birthday Page](https://rmnrj.github.io/Birthday/main.html)
