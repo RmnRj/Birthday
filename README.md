@@ -8,4 +8,4 @@ With Love ❤️
 ---
 
 👉 To see the outcome, visit:  
-[Birthday Page](https://rmnrj.github.io/Birthday/main.html)
+[Birthday Page](https://rmnrj.github.io/Birthday/index.html)
