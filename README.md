@@ -1,6 +1,6 @@
 # 🎉 Birthday Wishes 🎂
 
-This page is dedicated to my elder brother,  
+This page is dedicated to my elder brother Mr. Sunil,  
 who wants to wish *bhauju* (his girlfriend) on her birthday.  
 
 With Love ❤️
